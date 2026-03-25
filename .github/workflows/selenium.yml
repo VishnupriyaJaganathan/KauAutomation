@@ -1,0 +1,63 @@
+name: KAU Selenium Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 6 * * *'  # Nightly at 6am UTC
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Java 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Run tests
+        run: |
+          cd selenium-template-java-master/selenium-template-java-master
+          mvn test -DsuiteXmlFile=testng.xml
+        env:
+          CI: true
+
+      - name: Upload Surefire test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: surefire-report
+          path: selenium-template-java-master/selenium-template-java-master/target/surefire-reports/
+
+  publish-report:
+    needs: test
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Download test report
+        uses: actions/download-artifact@v4
+        with:
+          name: surefire-report
+          path: surefire-reports/
+
+      - name: Deploy report to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: surefire-reports/
