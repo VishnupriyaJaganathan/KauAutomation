@@ -3,53 +3,76 @@ package pages;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
 import factory.PageBase;
 
-public class GoogleHomePage extends PageBase {
-    public GoogleHomePage(WebDriver driver) {
-		super(driver);
-		// TODO Auto-generated constructor stub
-	}
+import java.time.Duration;
 
-	protected WebDriver driver;
-	
-    @FindBy(xpath = "//header/div[2]/div[1]//a/span")
-    public WebElement pageHeader;
+/**
+ * Page Object Model for the KAU homepage (https://www.kau.se).
+ */
+public class GoogleHomePage extends PageBase {
+
+    private WebDriver driver;
+    private WebDriverWait wait;
+
+    @FindBy(css = "button.cm-btn-success")
+    public WebElement acceptCookiesBtn;
 
     @FindBy(xpath = "//span[text()='Mitt Kau']")
-    public WebElement MittKau;
+    public WebElement mittKau;
 
-    @FindBy(xpath = "//button[text()='Logga in']")
-    public WebElement Loggain;
+    @FindBy(css = "button.js-search-modal-toggle")
+    public WebElement searchToggle;
 
-    @FindBy(xpath = "//input[@id='username']")
-    public WebElement username;
+    @FindBy(css = "input[type='search']")
+    public WebElement searchInput;
 
-    @FindBy(xpath = "//input[@id='password']")
-    public WebElement password;
+    public GoogleHomePage(WebDriver driver) {
+        super(driver);
+        this.driver = driver;
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        PageFactory.initElements(driver, this);
+    }
 
-    public void clickMittKau() {
-        if (MittKau != null) {
-            MittKau.click();
-        } else {
-            System.out.println("MittKau element is null. Cannot perform click.");
+    /**
+     * Dismiss the Klaro cookie consent overlay if present.
+     */
+    public void dismissCookieBanner() {
+        try {
+            wait.until(ExpectedConditions.elementToBeClickable(acceptCookiesBtn));
+            acceptCookiesBtn.click();
+            wait.until(ExpectedConditions.invisibilityOf(acceptCookiesBtn));
+        } catch (Exception e) {
+            System.out.println("Cookie banner not present or already dismissed.");
         }
     }
 
-    public void clickLoggain() {
-        Loggain.click();
+    /**
+     * Click the Mitt Kau navigation link.
+     */
+    public void clickMittKau() {
+        try {
+            wait.until(ExpectedConditions.elementToBeClickable(mittKau));
+            mittKau.click();
+        } catch (Exception e) {
+            System.out.println("MittKau element not clickable: " + e.getMessage());
+        }
     }
 
-    public void enterUsername() {
-        username.sendKeys("");
-    }
-
-    public void enterPassword() {
-        password.sendKeys("");
-    }
-
+    /**
+     * Perform a search on kau.se and return the results page.
+     */
     public GoogleResultsPage searchFor(String query) {
-        // Implement search functionality here
+        wait.until(ExpectedConditions.elementToBeClickable(searchToggle));
+        searchToggle.click();
+        wait.until(ExpectedConditions.visibilityOf(searchInput));
+        searchInput.sendKeys(query);
+        searchInput.submit();
         return new GoogleResultsPage(driver);
     }
 }
+
