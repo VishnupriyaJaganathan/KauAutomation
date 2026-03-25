@@ -5,75 +5,64 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.ie.InternetExplorerDriver;
-import org.openqa.selenium.ie.InternetExplorerOptions;
-import org.openqa.selenium.remote.DesiredCapabilities;
 
 import factory.BrowserProvider;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
 /**
- * This enum define how to initialize each browser driver.
- * 
- * @author ejunior
- *
+ * This enum defines how to initialize each browser driver.
+ * Updated for Selenium 4 - removed deprecated DesiredCapabilities.
+ * Headless mode is enabled automatically when running in CI (no display).
  */
 public enum Browser {
-	FIREFOX {
-		@Override
-		public WebDriver initialize(DesiredCapabilities capabilities) {
-			synchronized (BrowserProvider.class) {
-				WebDriverManager.firefoxdriver().setup();
-				FirefoxOptions options = new FirefoxOptions();
-				options.merge(capabilities);
-				return new FirefoxDriver(options);
-			}
-		}
-	},
+    FIREFOX {
+        @Override
+        public WebDriver initialize() {
+            synchronized (BrowserProvider.class) {
+                WebDriverManager.firefoxdriver().setup();
+                FirefoxOptions options = new FirefoxOptions();
+                if (isHeadless()) {
+                    options.addArguments("--headless");
+                }
+                return new FirefoxDriver(options);
+            }
+        }
+    },
 
-	CHROME {
-		@Override
-		public WebDriver initialize(DesiredCapabilities capabilities) {
-			synchronized (BrowserProvider.class) {
-				WebDriverManager.chromedriver().setup();
-				ChromeOptions options = new ChromeOptions();
-				options.merge(capabilities);
-				return new ChromeDriver(options);
-			}
-		}
-	},
+    CHROME {
+        @Override
+        public WebDriver initialize() {
+            synchronized (BrowserProvider.class) {
+                WebDriverManager.chromedriver().setup();
+                ChromeOptions options = new ChromeOptions();
+                if (isHeadless()) {
+                    options.addArguments("--headless=new");
+                    options.addArguments("--no-sandbox");
+                    options.addArguments("--disable-dev-shm-usage");
+                }
+                return new ChromeDriver(options);
+            }
+        }
+    };
 
-	IE {
-		@Override
-		public WebDriver initialize(DesiredCapabilities capabilities) {
-			synchronized (BrowserProvider.class) {
-				WebDriverManager.iedriver().setup();
-				InternetExplorerOptions options = new InternetExplorerOptions();
-				options.merge(capabilities);
-				return new InternetExplorerDriver(options);
-			}
-		}
-	};
+    /**
+     * Initialize the browser driver.
+     */
+    public abstract WebDriver initialize();
 
-	/**
-	 * Method to be implemented by each Browser Enum.
-	 * 
-	 * @param capabilities
-	 * @return
-	 */
-	public abstract WebDriver initialize(DesiredCapabilities capabilities);
+    /**
+     * Returns true if running in CI environment (no display available).
+     */
+    private static boolean isHeadless() {
+        return System.getenv("CI") != null || System.getProperty("headless", "false").equals("true");
+    }
 
-	@Override
-	public String toString() {
-		switch (this) {
-		case FIREFOX:
-			return "FIREFOX";
-		case CHROME:
-			return "CHROME";
-		case IE:
-			return "IE";
-		default:
-			throw new IllegalArgumentException();
-		}
-	}
+    @Override
+    public String toString() {
+        switch (this) {
+            case FIREFOX: return "FIREFOX";
+            case CHROME:  return "CHROME";
+            default: throw new IllegalArgumentException();
+        }
+    }
 }
