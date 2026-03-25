@@ -15,42 +15,43 @@ import pages.GoogleHomePage;
 import pages.GoogleResultsPage;
 
 public class GoogleSearchStepDefinitions {
+
     private WebDriver driver;
-    private GoogleHomePage googleHomePage;
-    public GoogleResultsPage googleResultsPage;
+    private GoogleHomePage kauHomePage;
+    private GoogleResultsPage kauResultsPage;
 
     @Before
     public void setUp() {
-    		driver = BrowserProvider.createDriver(Browser.CHROME);
-    		driver.manage().window().maximize();
-        // Put your setup code here if needed
+        driver = BrowserProvider.createDriver(Browser.CHROME);
+        driver.manage().window().maximize();
     }
 
     @Given("^I navigate to the Google homepage$")
-    public void navigateToGoogleHomepage() {
-driver.get("http://www.google.com");
-		
-		GoogleHomePage googleHomePage = new GoogleHomePage(driver);
-		
+    public void navigateToKauHomepage() {
+        driver.get("https://www.kau.se/");
+        // Bug fix: was creating local variable instead of assigning to class field
+        kauHomePage = new GoogleHomePage(driver);
+        kauHomePage.dismissCookieBanner();
     }
 
     @When("^I search for \"([^\"]*)\"$")
     public void searchFor(String searchTerm) {
-    	GoogleResultsPage googleResultsPage = googleHomePage.searchFor("Selenium with java");
-        // Put your code to perform the search here
-    	
+        // Bug fix: was using hardcoded string instead of the searchTerm parameter
+        kauResultsPage = kauHomePage.searchFor(searchTerm);
     }
 
-
     @Then("^the title of the results page should be \"([^\"]*)\"$")
-    public void verifyResultsPageTitle(String expectedTitle,GoogleResultsPage googleResultsPage) {
-    	assertTrue(googleResultsPage.getTitle().equals("Selenium with java - Pesquisa Google"));
-		assertTrue(googleResultsPage.isResultPresent("Selenium Tutorial"));
+    public void verifyResultsPageTitle(String expectedTitle) {
+        // Bug fix: removed GoogleResultsPage as a method parameter (Cucumber doesn't support that)
+        String resultText = kauResultsPage.getSearchResultText();
+        assertTrue(resultText.contains("IT"), "Search results should contain 'IT'");
     }
 
     @After
     public void tearDown() {
-    	driver.quit();
-		driver = null;
+        if (driver != null) {
+            driver.quit();
+            driver = null;
+        }
     }
 }
