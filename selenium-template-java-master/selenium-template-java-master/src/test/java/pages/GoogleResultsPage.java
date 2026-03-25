@@ -1,76 +1,56 @@
 package pages;
 
-import java.util.List;
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import factory.PageBase;
-import utils.SeleniumUtils;
+
+import java.time.Duration;
+import java.util.List;
 
 /**
- * Example of Page Object Model(POM) using Page Factory of the Google Search
- * Page.
- * 
- * @author ejunior
- *
+ * Page Object Model for KAU search results page.
+ * Updated to target kau.se search result elements.
  */
 public class GoogleResultsPage extends PageBase {
-	private WebDriver driver;
-	
-	private String txtSearch = "//input[@name='q']";
-	private String btnSearch = "//input[@jsname='Tg7LZd']";
-	private String divResults = "//div[contains(@class, 'rc')]";
-	private String linkResult = ".//div[contains(@class, 'r')]/a[1]";
 
-	/**
-	 * Constructor of the page. Initialize the Page Factory objects.
-	 * 
-	 * @param driver
-	 */
-	public GoogleResultsPage(WebDriver driver) {
-		super(driver);
-		this.driver = driver;
-	}
+    private WebDriver driver;
+    private WebDriverWait wait;
 
-	/**
-	 * Performs a simple google search
-	 * 
-	 * @param query
-	 */
-	public void searchFor(String query) {
-		SeleniumUtils.waitForElement(driver, txtSearch).sendKeys(query);
-		SeleniumUtils.waitForElementToBeClickable(driver, btnSearch).click();
-	}
+    private By searchResultText = By.xpath("//p[contains(text(), 'Din sökning på')]");
+    private By resultLinks = By.cssSelector("h2.search-result-title a");
 
-	/**
-	 * Check if a result is present inside the page
-	 * 
-	 * @param resultTitle
-	 * @return
-	 */
-	public boolean isResultPresent(String resultTitle) {
-		List<WebElement> results = getDivResults();
-		
-		for (WebElement result : results) {
-			WebElement title = result.findElement(By.xpath(linkResult));
-			
-			System.out.println(title.getText());
+    public GoogleResultsPage(WebDriver driver) {
+        super(driver);
+        this.driver = driver;
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+    }
 
-			if (title.getText().contains(resultTitle))
-				return true;
-		}
+    /**
+     * Wait for search results to load and return the results info text.
+     */
+    public String getSearchResultText() {
+        WebElement resultInfo = wait.until(
+            ExpectedConditions.visibilityOfElementLocated(searchResultText)
+        );
+        return resultInfo.getText();
+    }
 
-		return false;
-	}
-
-	/**
-	 * Get the results elements inside the page
-	 * 
-	 * @return
-	 */
-	public List<WebElement> getDivResults() {
-		return SeleniumUtils.waitForElements(driver, divResults);
-	}
+    /**
+     * Check if search results contain the given keyword.
+     */
+    public boolean isResultPresent(String keyword) {
+        wait.until(ExpectedConditions.presenceOfElementLocated(searchResultText));
+        List<WebElement> results = driver.findElements(resultLinks);
+        for (WebElement result : results) {
+            System.out.println("Result: " + result.getText());
+            if (result.getText().toLowerCase().contains(keyword.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
