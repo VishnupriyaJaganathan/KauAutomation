@@ -78,8 +78,3 @@ public class GoogleSearchTests {
         }
     }
 }
-```
-
-Path:
-```
-src/test/java/tests/GoogleSearchTests.java
