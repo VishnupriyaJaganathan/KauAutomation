@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="KAU Automation Suite" verbose="1">
+    <test name="KAU Website Tests">
+        <classes>
+            <class name="tests.GoogleSearchTests"/>
+        </classes>
+    </test>
+</suite>
+```
+
+Path:
+```
+selenium-template-java-master/selenium-template-java-master/testng.xml
