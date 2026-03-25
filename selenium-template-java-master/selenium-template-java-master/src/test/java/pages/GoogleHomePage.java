@@ -71,7 +71,7 @@ public class GoogleHomePage extends PageBase {
         searchToggle.click();
         wait.until(ExpectedConditions.visibilityOf(searchInput));
         searchInput.sendKeys(query);
-        searchInput.submit();
+        searchInput.sendKeys(org.openqa.selenium.Keys.ENTER);
         return new GoogleResultsPage(driver);
     }
 }
