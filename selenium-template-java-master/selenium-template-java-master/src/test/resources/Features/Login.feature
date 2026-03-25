@@ -1,6 +1,11 @@
-Feature: Google Search
+Feature: KAU Website Search
 
-  Scenario: Perform a Google Search for "Selenium with java"
+  Scenario: Perform a search on the KAU homepage
     Given I navigate to the Google homepage
-    When I search for "Selenium with java"
-    Then the title of the results page should be "Selenium with java - Pesquisa Google"
+    When I search for "IT"
+    Then the title of the results page should be "IT"
+```
+
+Path:
+```
+src/test/resources/Features/Login.feature
